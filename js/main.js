@@ -1,13 +1,18 @@
-const identityIcon = document.querySelector('.identity-icon');
-const source = document.getElementById('source');
+const identityIcon = document.getElementById('identityIcon');
 const generate = document.getElementById('generate');
 const download =  document.getElementById('download');
+var source;
+var count;
 
 /**
  * generateボタン
  */
 generate.addEventListener('click', () => {
-  const hash = sha1(source.value);
+  source = document.getElementById('source');
+  count = Number(document.getElementById('count').value);
+  count = (count != 0) ? count : 5;
+  const hash = generateHash(source.value);
+  console.log(hash);
   const size = 300;
 
   identityIcon.innerHTML = generateIcon(hash, size);
@@ -17,10 +22,6 @@ generate.addEventListener('click', () => {
  * downloadボタン
  */
 download.addEventListener('click', () => {
-  const hash = sha1(source.value);
-  const size = 300;
-
-  identityIcon.innerHTML = generateIcon(hash, size);
   const svg = identityIcon.querySelector('svg');
   const svgData = new XMLSerializer().serializeToString(svg);
   const canvas = document.createElement('canvas');
@@ -39,20 +40,27 @@ download.addEventListener('click', () => {
   img.src = "data:image/svg+xml;charset=utf-8;base64," + btoa(unescape(encodeURIComponent(svgData)));
 });
 
+function generateHash(str) {
+  let hash = sha1(str);
+  for (var i=0; i<10; i++) {
+    hash += sha1(hash);
+  }
+  return hash;
+}
+
 /**
  * IdentityIconを生成し、SVGのパスを返す
- * @param {string} hash sha1などでハッシュ化した値(40桁)
+ * @param {string} hash sha1などでハッシュ化した値
  * @param {number} size アイコンの横幅
  * @return {string} SVGのパス
  */
 function generateIcon(hash, size) {
-  const forDraw = hash.substr(0, 25);
-  const forColor = hash.substr(25);
+  const forDraw = hash.substr(0, count*count);
 
   // rgb(x, y, z)
-  const hue = `rgb(${generateRGBCode(forColor).join(',')}`;
+  const hue = `rgb(${generateRGBCode(hash).join(',')}`;
 
-  const interval = size / 5;
+  const interval = size / count;
   let x = 0;
   let y = 0;
   let path = '';

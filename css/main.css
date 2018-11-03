@@ -1,0 +1,18 @@
+body {
+  padding: 10px;
+}
+#inputField > .row {
+  padding-bottom: 5px;
+}
+.row > label {
+  font-weight: bold;
+}
+#identityIcon {
+  padding-top: 10px;
+}
+.buttonRow {
+  padding-top: 10px;
+}
+.buttonRow > button {
+  margin-left: 10px;
+}
