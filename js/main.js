@@ -1,99 +1,84 @@
 const identityIcon = document.getElementById('identityIcon');
+const dotCount = document.getElementById('dotCount');
 const generate = document.getElementById('generate');
 const download =  document.getElementById('download');
 const iconSize = 300;
-var source;
-var count;
+const defaultDotCount = 5;
+const defaultColor = '#F0F0F0';
 
 /**
  * generateボタン
  */
 generate.addEventListener('click', () => {
-  source = document.getElementById('source');
-  let dotCount = Number(document.getElementById('dotCount').value);
-  dotCount = (dotCount != 0) ? dotCount : 5;
-  const hash = generateHash(source.value);
-  console.log(hash);
-  console.log(aaa(hash, dotCount));
-
-  identityIcon.innerHTML = generateIcon(hash);
+  let sourceValue = (source.value.length !== 0) ? source.value : Math.random().toString(36).slice(-8);
+  let dotCountValue = (Number(dotCount.value) !== 0) ? Number(dotCount.value) : defaultDotCount;
+  const hash = generateHash(sourceValue);
+  const dotArray = hashToTwoDimensionArray(hash, dotCountValue);
+  const rects = twoDimensionArrayToRect(dotArray, iconSize / dotCountValue);
+  identityIcon.innerHTML = `<svg width="${iconSize}" height="${iconSize}"><g>"${rects}"</g></svg>`
 });
 
+// 文字列からハッシュ値を生成
 function generateHash(str) {
-  return Array(10).fill(sha1(str)).reduce((result, value) => {
-    return result + value;
-  });
-}
-
-function aaa(hash, dotCount) {
-  return splitEqualLength(hash, dotCount * dotCount).map((value) => {
-    return stringToInt(value) % 2;
-  }).reduce((result, item) => {
-    if (!result instanceof Array) {
-      return new Array(dotCount).push(item);
-    } else {
-      return result.push(item);
+  let length = 5;
+  return Array(length)
+    .fill(str)
+    .map((value, index, array) => {
+      if (index == 0 || index == 4) { return sha1(value); }
+      else if (index == 1 || index == 3) { return sha1(sha1(value)); }
+      else { return sha1(sha1(sha1(value))); }
+    })
+    .reduce((result, value) => {
+      return result + value;
     }
-  })
+  );
 }
 
-function generateIcon(hash) {
-  const forDraw = hash.substr(0, count * count);
-
-  // rgb(x, y, z)
-  const hue = `rgb(${generateRGBCode(hash).join(',')}`;
-
-  const interval = iconSize / count;
-  let x = 0;
-  let y = 0;
-  let path = '';
-
-  for (let c of forDraw) {
-    const isDraw = c.charCodeAt() % 2 === 0;
-
-    path += `<rect x="${x}" y="${y}" width="${interval}" height="${interval}" fill="${isDraw ? hue : 'white'}" />`;
-
-    if (x < iconSize - interval) {
-      x += interval;
-    } else {
-      x = 0;
-      y += interval;
-    }
-  }
-
-  return [
-    `<svg width="${iconSize}" height="${iconSize}">`,
-    '<g>',
-    path,
-    '</g>',
-  ].join('');
+// ハッシュ値を元に2次元配列を生成
+function hashToTwoDimensionArray(hash, dotCount) {
+  let hue = `rgb(${generateRGBCode(hash).join(',')})`;
+  return arrayToTwoDimension(
+    splitByLength(hash, dotCount * dotCount)
+    .map((value) => { return stringToInt(value) % 2; })
+    .map((value) => { return valueToColor(value, hue) }
+  ), dotCount);
 }
 
-// 文字列をRGB値に変換する
+// 文字列をRGB値の配列に変換する
 function generateRGBCode(str) {
-  let rgb = [0,0,0];
+  let rgb = [0, 0, 0];
   if (str && str.length >= 3) {
-    rgb = splitEqualLength(str, 3).map((value) => {
+    rgb = splitByLength(str, 3).map((value) => {
       return stringToInt(value) % 256;
     });
   }
   return rgb;
 }
 
-// 文字列を特定数に均等な長さで分割する
-function splitEqualLength(str, count) {
-  const length = Math.floor(str.length / count);
-  const regexp = new RegExp(`[\\s\\S]{1,${length}}`, 'g');
-  return str.match(regexp).slice(0, count);
+// 色を決定
+function valueToColor(value, hue) {
+  return (value !== 0) ? hue : defaultColor;
 }
 
-// 文字列を数値化する
-function stringToInt(str) {
-  return str.split('').map((value) => {
-    return value.charCodeAt();
-  }).reduce((result, value) => {
-    return result += value;
+// ２次元配列を元にrectタグを生成
+function twoDimensionArrayToRect(dotArray, dotSize) {
+  return dotArray.reduce((result, value, index, array) => {
+    result = (index === 1) ? arrayToRect(result, 0, dotSize) : result;
+    return result += arrayToRect(value, index * dotSize, dotSize);
   });
+}
+
+// １次元配列を元にrectタグを生成
+function arrayToRect(dotArray, x, dotSize) {
+  return dotArray.reduce((result, value, index, array) => {
+    result = (index === 1) ? generateRect(x, 0, dotSize, result) : result ;
+    return result += generateRect(x, index * dotSize, dotSize, value);
+  });
+}
+
+// rectタグを生成
+function generateRect(x, y, dotSize, hue) {
+  return `<rect x="${x}" y="${y}" width="${dotSize}" height="${dotSize}" fill="${hue}" />`;
 }
 
 /**
