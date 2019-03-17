@@ -4,9 +4,6 @@ body {
 #inputField > .row {
   padding-bottom: 5px;
 }
-.row > label {
-  font-weight: bold;
-}
 #identityIcon {
   padding-top: 10px;
 }

@@ -12,18 +12,21 @@
     <script src="js/jquery/jquery-3.1.1.min.js"></script>
     <script src="js/bootstrap/bootstrap.min.js"></script>
     <script src="js/FileSaver.min.js"></script>
+    <script src="js/util/arrayUtil.js"></script>
+    <script src="js/util/stringUtil.js"></script>
+    <script src="js/sha1.min.js"></script>
   </head>
   <body>
     <h1>GitHubデフォルトアイコン風画像生成</h1>
     <div id="inputField" class="container-fluid">
       <div class="row">
-        <label for="source" class="col-sm-1 control-label">ソース</label>
+        <label for="source" class="col-sm-2 control-label">アカウント名</label>
         <div class="col-sm-3">
           <input type="text" id="source" placeholder="画像生成元文字列">
         </div>
       </div>
       <div class="row">
-        <label for="dotCount" class="col-sm-1 control-label">ドット数</label>
+        <label for="dotCount" class="col-sm-2 control-label">１辺のドット数</label>
         <div class="col-sm-3">
           <input type="text" id="dotCount" placeholder="5">
         </div>
@@ -36,8 +39,5 @@
     <div id="identityIcon">
     </div>
     <script src="js/main.js"></script>
-    <script src="js/util/arrayUtil.js"></script>
-    <script src="js/util/stringUtil.js"></script>
-    <script src="js/sha1.min.js"></script>
   </body>
 </html>

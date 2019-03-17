@@ -1,37 +1,29 @@
-const identityIcon = document.getElementById('identityIcon');
-const dotCount = document.getElementById('dotCount');
-const generate = document.getElementById('generate');
-const download =  document.getElementById('download');
-const iconSize = 300;
+const sourceElm = document.getElementById('source');
+const dotCountElm = document.getElementById('dotCount');
+const generateElm = document.getElementById('generate');
+const downloadElm =  document.getElementById('download');
+const identityIconElm = document.getElementById('identityIcon');
+const iconSize = 315;
 const defaultDotCount = 5;
 const defaultColor = '#F0F0F0';
 
 /**
  * generateボタン
  */
-generate.addEventListener('click', () => {
-  let sourceValue = (source.value.length !== 0) ? source.value : Math.random().toString(36).slice(-8);
-  let dotCountValue = (Number(dotCount.value) !== 0) ? Number(dotCount.value) : defaultDotCount;
-  const hash = generateHash(sourceValue);
-  const dotArray = hashToTwoDimensionArray(hash, dotCountValue);
-  const rects = twoDimensionArrayToRect(dotArray, iconSize / dotCountValue);
+generateElm.addEventListener('click', () => {
+  let source = (sourceElm.value.length !== 0) ? sourceElm.value : Math.random().toString(36).slice(-8);
+  let dotCount = (Number(dotCountElm.value) !== 0) ? Number(dotCountElm.value) : defaultDotCount;
+  const dotArray = hashToTwoDimensionArray(generateHash(source), dotCount);
+  const rects = twoDimensionArrayToRect(dotArray, iconSize / dotCount);
   identityIcon.innerHTML = `<svg width="${iconSize}" height="${iconSize}"><g>"${rects}"</g></svg>`
 });
 
 // 文字列からハッシュ値を生成
 function generateHash(str) {
-  let length = 5;
-  return Array(length)
-    .fill(str)
-    .map((value, index, array) => {
-      if (index == 0 || index == 4) { return sha1(value); }
-      else if (index == 1 || index == 3) { return sha1(sha1(value)); }
-      else { return sha1(sha1(sha1(value))); }
-    })
-    .reduce((result, value) => {
-      return result + value;
-    }
-  );
+  const sha1hash = sha1(str);
+  return Array(10).fill(sha1hash).reduce((result, value) => {
+    return result + sha1(result) + value;
+  });
 }
 
 // ハッシュ値を元に2次元配列を生成
@@ -41,7 +33,11 @@ function hashToTwoDimensionArray(hash, dotCount) {
     splitByLength(hash, dotCount * dotCount)
     .map((value) => { return stringToInt(value) % 2; })
     .map((value) => { return valueToColor(value, hue) }
-  ), dotCount);
+  ), dotCount)
+  .map((value, index, array) => {
+    // 配列の内容が左右対称になるようにする
+    return (index > dotCount / 2) ? array[dotCount - index - 1] : value;
+  });
 }
 
 // 文字列をRGB値の配列に変換する
@@ -84,7 +80,7 @@ function generateRect(x, y, dotSize, hue) {
 /**
  * downloadボタン
  */
-download.addEventListener('click', () => {
+downloadElm.addEventListener('click', () => {
   const svg = identityIcon.querySelector('svg');
   const svgData = new XMLSerializer().serializeToString(svg);
   const canvas = document.createElement('canvas');
