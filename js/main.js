@@ -3,36 +3,38 @@ const dotCountElm = document.getElementById('dotCount');
 const generateElm = document.getElementById('generate');
 const downloadElm =  document.getElementById('download');
 const identityIconElm = document.getElementById('identityIcon');
-const iconSize = 315;
-const defaultDotCount = 5;
+const iconSize = 300;
+const dotCount = 5;
+const dotSize = 50;
 const defaultColor = '#F0F0F0';
 
 /**
  * generateボタン
  */
 generateElm.addEventListener('click', () => {
-  let source = (sourceElm.value.length !== 0) ? sourceElm.value : Math.random().toString(36).slice(-8);
-  let dotCount = (Number(dotCountElm.value) !== 0) ? Number(dotCountElm.value) : defaultDotCount;
-  const dotArray = hashToTwoDimensionArray(generateHash(source), dotCount);
-  const rects = twoDimensionArrayToRect(dotArray, iconSize / dotCount);
-  identityIcon.innerHTML = `<svg width="${iconSize}" height="${iconSize}"><g>"${rects}"</g></svg>`
+  // アイコン生成元ハッシュ値生成
+  let sourceHash = getSourceHash(sourceElm.value);
+  // ハッシュ値を２次元配列に変換
+  const dotArray = hashToTwoDimensionArray(sourceHash, dotCount);
+  // ２次元配列をrectタグに変換
+  const rects = twoDimensionArrayToRect(dotArray);
+  // svgタグ内にrectタグ群を追加
+  addRectTag(rects);
 });
 
-// 文字列からハッシュ値を生成
-function generateHash(str) {
-  const sha1hash = sha1(str);
-  return Array(10).fill(sha1hash).reduce((result, value) => {
-    return result + sha1(result) + value;
-  });
+// 文字列をハッシュ値に変換
+function getSourceHash(str) {
+  let source = (str.length !== 0) ? str : Math.random().toString(36).slice(-8);
+  return generateHash(source);
 }
 
 // ハッシュ値を元に2次元配列を生成
-function hashToTwoDimensionArray(hash, dotCount) {
+function hashToTwoDimensionArray(hash) {
   let hue = `rgb(${generateRGBCode(hash).join(',')})`;
   return arrayToTwoDimension(
     splitByLength(hash, dotCount * dotCount)
     .map((value) => { return stringToInt(value) % 2; })
-    .map((value) => { return valueToColor(value, hue) }
+    .map((value) => { return (value !== 0) ? hue : defaultColor; }
   ), dotCount)
   .map((value, index, array) => {
     // 配列の内容が左右対称になるようにする
@@ -51,30 +53,35 @@ function generateRGBCode(str) {
   return rgb;
 }
 
-// 色を決定
-function valueToColor(value, hue) {
-  return (value !== 0) ? hue : defaultColor;
-}
-
 // ２次元配列を元にrectタグを生成
-function twoDimensionArrayToRect(dotArray, dotSize) {
+function twoDimensionArrayToRect(dotArray) {
   return dotArray.reduce((result, value, index, array) => {
-    result = (index === 1) ? arrayToRect(result, 0, dotSize) : result;
-    return result += arrayToRect(value, index * dotSize, dotSize);
+    result = (index === 1) ? arrayToRect(result, 25) : result;
+    return result += arrayToRect(value, index * dotSize + 25);
   });
 }
 
 // １次元配列を元にrectタグを生成
-function arrayToRect(dotArray, x, dotSize) {
+function arrayToRect(dotArray, x) {
   return dotArray.reduce((result, value, index, array) => {
-    result = (index === 1) ? generateRect(x, 0, dotSize, result) : result ;
-    return result += generateRect(x, index * dotSize, dotSize, value);
+    result = (index === 1) ? generateRect(x, 25, result) : result ;
+    return result += generateRect(x, index * dotSize + 25, value);
   });
 }
 
 // rectタグを生成
-function generateRect(x, y, dotSize, hue) {
+function generateRect(x, y, hue) {
   return `<rect x="${x}" y="${y}" width="${dotSize}" height="${dotSize}" fill="${hue}" />`;
+}
+
+function addRectTag(rects) {
+  let targetElm = identityIcon.getElementsByTagName('g')[0];
+  // 初期化
+  targetElm.innerHTML = '';
+  // rectタグ追加
+  targetElm.insertAdjacentHTML('afterbegin', rects);
+  // 背景設定
+  targetElm.insertAdjacentHTML('afterbegin', `<rect x="0" y="0" width="300" height="300" fill="#F0F0F0" />`);
 }
 
 /**
